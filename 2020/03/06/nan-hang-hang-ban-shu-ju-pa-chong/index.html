@@ -4,9 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="我的第一篇博文, 狗乐乐">
-    <meta name="description" content="用途说明目前，此博客网站用于总结个人学习经验，方便记录学习成果。
-">
+    <meta name="keywords" content="南航航班数据爬虫, 狗乐乐">
+    <meta name="description" content="#FlightAware网站南航航班数据自动爬取
+import pandas as pd
+from bs4 import BeautifulSoup
+import numpy as np
+from selenium import webdr">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -14,7 +17,7 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>我的第一篇博文 | 狗乐乐</title>
+    <title>南航航班数据爬虫 | 狗乐乐</title>
     <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/zchangyanle/zchangyanle.github.io/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/zchangyanle/zchangyanle.github.io/libs/awesome/css/all.css">
@@ -241,12 +244,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('https://cdn.jsdelivr.net/gh/zchangyanle/zchangyanle.github.io/medias/featureimages/3.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('https://cdn.jsdelivr.net/gh/zchangyanle/zchangyanle.github.io/medias/featureimages/21.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">我的第一篇博文</h1>
+                    <h1 class="description center-align post-title">南航航班数据爬虫</h1>
                 </div>
             </div>
         </div>
@@ -363,8 +366,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E5%A3%B0%E6%98%8E/">
-                                <span class="chip bg-color">声明</span>
+                            <a href="/tags/selenium-BeautifulSoup-%E7%88%AC%E8%99%AB-%E5%8D%97%E8%88%AA/">
+                                <span class="chip bg-color">-selenium -BeautifulSoup -爬虫 -南航</span>
                             </a>
                         
                     </div>
@@ -379,21 +382,21 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-02-20
+                    2020-03-06
                 </div>
                 
 
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-check fa-fw"></i>更新日期:&nbsp;&nbsp;
-                    2020-02-23
+                    2020-03-06
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    29
+                    527
                 </div>
                 
 
@@ -411,7 +414,86 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="用途说明"><a href="#用途说明" class="headerlink" title="用途说明"></a>用途说明</h2><p>目前，此博客网站用于总结个人学习经验，方便记录学习成果。</p>
+                <p>#FlightAware网站南航航班数据自动爬取</p>
+<pre><code class="python">import pandas as pd
+from bs4 import BeautifulSoup
+import numpy as np
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+import datetime
+#from selenium.webdriver.chrome.options import Options
+
+def wait_load(Xpath):
+    #等待加载
+    locator = (By.XPATH,Xpath)
+    WebDriverWait(driver,20,0.5).until(EC.visibility_of_element_located(locator))
+
+def readtable():
+    html = driver.page_source
+    cur_page = BeautifulSoup(html,features=&quot;lxml&quot;)
+    cur_table = cur_page.find(&quot;table&quot;,{&quot;class&quot;:&quot;prettyTable fullWidth&quot;})
+    cur_tbody = cur_table.find(&quot;tbody&quot;)
+    cur_trs = cur_tbody.findAll(&quot;tr&quot;)
+    table = [[j for j in i.findAll(&quot;td&quot;)] for i in cur_trs]
+    n,m = np.array(table).shapes
+    result = [[table[i][j].getText() for j in range(m)] for i in range(n)]
+    result = [[j.replace(&quot;\n&quot;,&quot;&quot;).replace(&quot; &quot;,&quot;&quot;) for j in i] for i in result]
+    result = pd.DataFrame(result)
+    result.columns = &#39;标识符 机型 始发地 目的地 出发 预计到达时间&#39;.split(&quot; &quot;)
+    return result
+
+if __name__ == &quot;__main__&quot;:
+
+    driver = webdriver.PhantomJS(r&quot;.\phantomjs-2.1.1-windows\bin\phantomjs.exe&quot;)
+#    options = Options()
+#    options.add_argument(&#39;--headless&#39;)
+#    driver = webdriver.Chrome(executable_path=r&quot;C:\Program Files (x86)\Google\Chrome\Application\chromedriver.exe&quot;,options=options)
+
+    driver.get(&quot;https://zh.flightaware.com/live/fleet/&quot;)
+    wait_load(&#39;//*[@id=&quot;topWrapper&quot;]/div[1]/nav/div/div[2]/a&#39;)
+
+    login_in = driver.find_element_by_xpath(&#39;//*[@id=&quot;topWrapper&quot;]/div[1]/nav/div/div[2]/a&#39;)
+    login_in.click()
+    wait_load(&#39;//*[@id=&quot;popupLogin&quot;]/div/div[2]/div/form/div[1]/input[1]&#39;)
+
+    driver.find_element_by_name(&quot;flightaware_username&quot;).send_keys(&quot;&quot;)
+    driver.find_element_by_name(&quot;flightaware_password&quot;).send_keys(&quot;&quot;)
+    driver.find_element_by_class_name(&quot;actionButton&quot;).click()
+    wait_load(&#39;//*[@id=&quot;slideOutPanel&quot;]/div/table[2]/tbody&#39;)
+    print(&#39;登录成功&#39;)
+
+    driver.get(&quot;https://zh.flightaware.com/live/fleet/CSN&quot;)
+    wait_load(&#39;//*[@id=&quot;slideOutPanel&quot;]/div/table[2]/tbody/tr[2]/td/table/tbody&#39;)
+
+    results = readtable()
+    print(&#39;开始爬取数据&#39;)
+    while 1:
+        page_item = driver.find_element_by_xpath(&#39;//*[@id=&quot;slideOutPanel&quot;]/div/table[2]/tbody/tr[2]/td/span[2]&#39;)
+        try:
+            next_btn = page_item.find_element_by_link_text(&#39;后40条&#39;)
+        except:
+            try:
+                pre_btn = page_item.find_element_by_link_text(&#39;前40条&#39;)
+                print(&#39;完成&#39;)
+                break
+            except:
+                print(&quot;页面异常或航班数据少于40，仅有一个页面&quot;)
+                break
+        driver.execute_script(&quot;arguments[0].scrollIntoView();&quot;,next_btn)
+        next_btn.click()
+        wait_load(&#39;//*[@id=&quot;slideOutPanel&quot;]/div/table[2]/tbody/tr[2]/td/table/tbody&#39;)
+        result = readtable()
+        results = results.append(result)
+    results.index = range(len(results))
+    filename = datetime.datetime.now().strftime(&quot;%Y-%m-%d&quot;)+&quot;.xlsx&quot;
+    writer = pd.ExcelWriter(filename)
+    results.to_excel(writer, sheet_name=&#39;CSN&#39;)
+    writer.save()
+    writer.close()
+    driver.close()</code></pre>
 
             </div>
             <hr/>
@@ -437,7 +519,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://yoursite.com/2020/02/20/wo-de-di-yi-pian-bo-wen/">http://yoursite.com/2020/02/20/wo-de-di-yi-pian-bo-wen/</a>
+                    <a href="http://yoursite.com/2020/03/06/nan-hang-hang-ban-shu-ju-pa-chong/">http://yoursite.com/2020/03/06/nan-hang-hang-ban-shu-ju-pa-chong/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -475,8 +557,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E5%A3%B0%E6%98%8E/">
-                                    <span class="chip bg-color">声明</span>
+                                <a href="/tags/selenium-BeautifulSoup-%E7%88%AC%E8%99%AB-%E5%8D%97%E8%88%AA/">
+                                    <span class="chip bg-color">-selenium -BeautifulSoup -爬虫 -南航</span>
                                 </a>
                             
                         </div>
@@ -517,9 +599,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2020/03/06/nan-hang-hang-ban-shu-ju-pa-chong/">
                     <div class="card-image">
@@ -541,9 +624,9 @@ from selenium import webdr
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2020-03-06
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-03-06
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -552,6 +635,7 @@ from selenium import webdr
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -567,7 +651,7 @@ from selenium import webdr
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge right-badge text-color">
-                本篇&nbsp;<i class="far fa-dot-circle"></i>
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
                 <a href="/2020/02/20/wo-de-di-yi-pian-bo-wen/">
@@ -598,7 +682,6 @@ from selenium import webdr
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
